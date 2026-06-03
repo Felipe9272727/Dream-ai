@@ -1,0 +1,13 @@
+# Dream-AI — dependências
+# Núcleo (treino do zero)
+torch>=2.1.0
+numpy>=1.24.0
+tokenizers>=0.15.0
+
+# Trilho 2 (fine-tuning de um modelo 1B aberto — opcional)
+# Descomente quando for partir para o "Sonho 1B" via fine-tuning:
+# transformers>=4.40.0
+# datasets>=2.18.0
+# peft>=0.10.0          # LoRA / QLoRA
+# bitsandbytes>=0.43.0  # quantização 4-bit
+# accelerate>=0.29.0

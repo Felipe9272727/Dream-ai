@@ -1,0 +1,20 @@
+# Dados e artefatos de treino (grandes demais para o git)
+data/*.bin
+data/*.txt
+checkpoints/
+tokenizers_trained/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Sistema
+.DS_Store
+*.log
