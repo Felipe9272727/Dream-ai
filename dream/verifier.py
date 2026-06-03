@@ -25,6 +25,8 @@ import os
 @dataclasses.dataclass
 class TestCase:
     """Um caso de teste: dada uma chamada, qual a saída esperada."""
+    __test__ = False     # evita que o pytest tente coletar isto como teste
+
     call: str            # ex: "soma(2, 3)"
     expected: str        # ex: "5"  (comparado via repr/igualdade)
 

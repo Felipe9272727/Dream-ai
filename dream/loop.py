@@ -29,22 +29,10 @@ from .verifier import verify_solution
 
 def _solve_with_seed_oracle(problem: Problem) -> str:
     """
-    'Oráculo' de bootstrap: resolve os problemas-semente sem precisar do modelo grande.
-    Serve para testar todo o ciclo (sonho→verifica→memória) sem GPU.
+    'Oráculo' de bootstrap: usa a solução de referência do problema, sem precisar do
+    modelo grande. Serve para testar todo o ciclo (sonho→verifica→memória) sem GPU.
     """
-    name = problem.func_name
-    library = {
-        "soma": "def soma(a, b):\n    return a + b",
-        "fatorial": "def fatorial(n):\n    r = 1\n    for i in range(2, n+1):\n        r *= i\n    return r",
-        "fib": "def fib(n):\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a+b\n    return a",
-        "primos_ate": ("def primos_ate(n):\n"
-                       "    return [x for x in range(2, n) "
-                       "if all(x % d for d in range(2, int(x**0.5)+1))]"),
-        "eh_palindromo": ("def eh_palindromo(s):\n"
-                          "    s = s.lower().replace(' ', '')\n    return s == s[::-1]"),
-        "eh_anagrama": "def eh_anagrama(a, b):\n    return sorted(a) == sorted(b)",
-    }
-    return library.get(name, "")
+    return problem.reference_solution
 
 
 def run_cycle(

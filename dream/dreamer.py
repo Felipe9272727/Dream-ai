@@ -33,36 +33,44 @@ def dream_from_seeds(n: int, rng: random.Random | None = None) -> list[Problem]:
 
 
 def _mutate(p: Problem, rng: random.Random) -> Problem:
-    """Cria uma variação de um problema-semente com testes recalculados de verdade."""
+    """Cria uma variação de um problema-semente com testes recalculados de verdade.
+
+    A solução de referência é preservada (mesma função), então o bootstrap continua
+    conseguindo resolver a variação.
+    """
+    def variant(title, tests):
+        return Problem(title=title, prompt=p.prompt, func_name=p.func_name,
+                       tests=tests, difficulty=p.difficulty, category=p.category,
+                       reference_solution=p.reference_solution)
+
     if p.func_name == "soma":
         a, b = rng.randint(-50, 50), rng.randint(-50, 50)
-        return Problem(
-            title=f"soma_{a}_{b}", prompt=p.prompt, func_name="soma",
-            tests=[TestCase(f"soma({a}, {b})", str(a + b))], difficulty=1,
-        )
+        return variant(f"soma_{a}_{b}", [TestCase(f"soma({a}, {b})", str(a + b))])
     if p.func_name == "fatorial":
-        n = rng.randint(1, 8)
         import math
-        return Problem(
-            title=f"fatorial_{n}", prompt=p.prompt, func_name="fatorial",
-            tests=[TestCase(f"fatorial({n})", str(math.factorial(n)))], difficulty=2,
-        )
+        n = rng.randint(1, 8)
+        return variant(f"fatorial_{n}", [TestCase(f"fatorial({n})", str(math.factorial(n)))])
     if p.func_name == "fib":
         n = rng.randint(2, 15)
         a, b = 0, 1
         for _ in range(n):
             a, b = b, a + b
-        return Problem(
-            title=f"fib_{n}", prompt=p.prompt, func_name="fib",
-            tests=[TestCase(f"fib({n})", str(a))], difficulty=3,
-        )
+        return variant(f"fib_{n}", [TestCase(f"fib({n})", str(a))])
     if p.func_name == "primos_ate":
         n = rng.choice([10, 20, 30, 50])
         primos = [x for x in range(2, n) if all(x % d for d in range(2, int(x**0.5) + 1))]
-        return Problem(
-            title=f"primos_{n}", prompt=p.prompt, func_name="primos_ate",
-            tests=[TestCase(f"primos_ate({n})", repr(primos))], difficulty=3,
-        )
+        return variant(f"primos_{n}", [TestCase(f"primos_ate({n})", repr(primos))])
+    if p.func_name == "reverso":
+        import string
+        s = "".join(rng.choice(string.ascii_lowercase) for _ in range(rng.randint(1, 8)))
+        return variant(f"reverso_{s}", [TestCase(f"reverso({s!r})", repr(s[::-1]))])
+    if p.func_name == "maior":
+        xs = [rng.randint(-99, 99) for _ in range(rng.randint(2, 6))]
+        return variant(f"maior_{len(xs)}", [TestCase(f"maior({xs!r})", str(max(xs)))])
+    if p.func_name == "mdc":
+        import math
+        a, b = rng.randint(1, 100), rng.randint(1, 100)
+        return variant(f"mdc_{a}_{b}", [TestCase(f"mdc({a}, {b})", str(math.gcd(a, b)))])
     # fallback: devolve a própria semente
     return p
 

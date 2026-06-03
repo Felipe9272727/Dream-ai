@@ -4,6 +4,11 @@ data/*.txt
 checkpoints/
 tokenizers_trained/
 
+# Estado de "vida" e memória da IA (gerados em runtime, específicos de cada instância)
+life/
+dream_memory/
+adapters/
+
 # Python
 __pycache__/
 *.py[cod]

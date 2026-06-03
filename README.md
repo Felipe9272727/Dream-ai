@@ -28,6 +28,21 @@ Depois ela **dorme** (consolida via LoRA) e acorda melhor.
 
 📖 Detalhes em [`docs/SONHO.md`](docs/SONHO.md).
 
+## 🌅 Uma IA que VIVE entre sessões
+
+Em vez de "ligar e desligar", a Dream-AI tem uma **vida contínua**: ela acorda lembrando
+quem é, vive o dia atendendo você, dorme para sonhar e consolidar aprendizado, e na
+próxima sessão **acorda lembrando tudo**. O modelo base fica congelado; o que ela aprende
+acumula num adapter LoRA + memória legível.
+
+```
+🌅 ACORDAR → ☀️ VIVER → 🌙 SONHAR → 😴 DORMIR → 💾 PERSISTIR → (acorda lembrando) ↺
+```
+
+Isso é fundamentado em pesquisa real (sleep-time compute, memory consolidation, lifelong
+learning) — veja [`docs/PESQUISA.md`](docs/PESQUISA.md). A identidade dela vive em
+`life/identity.json` e o diário episódico em `life/journal.jsonl` — **auditáveis**.
+
 ## 🔒 Honestidade por construção
 
 A regra inviolável do sonho:
@@ -63,17 +78,20 @@ Dream-ai/
 │   ├── train.py        # loop de treino do zero
 │   ├── generate.py     # geração de texto
 │   ├── coder.py        # carrega o modelo Coder de 1B (Qwen2.5-Coder)
+│   ├── chat.py         # 💬 converse com a IA (com vida persistente)
 │   └── honesty.py      # prompt de sistema + métricas de honestidade
 ├── dream/
 │   ├── verifier.py     # 🔬 executa o código e checa — a "checagem de realidade"
-│   ├── problems.py     # 🌱 banco de problemas-semente
+│   ├── problems.py     # 🌱 banco de problemas (currículo por categoria/dificuldade)
 │   ├── dreamer.py      # 🌙 inventa novos problemas
 │   ├── consolidate.py  # 😴 consolida (LoRA) o que foi sonhado e verificado
+│   ├── benchmark.py    # 📊 mede inteligência (pass@1) em problemas held-out
+│   ├── lifecycle.py    # 🌅 a IA que VIVE entre sessões (identidade + diário)
 │   └── loop.py         # 🔁 orquestra vigília → sonho → sono
 ├── config/             # tamanhos: nano, small, medium, dream_1b
-├── tests/              # testes (inclui a prova de honestidade)
+├── tests/              # testes (inclui a prova de honestidade e a de persistência)
 ├── notebooks/          # 🚀 dream_ai_colab.ipynb — ponto de entrada no Colab Pro
-└── docs/               # SONHO.md, HONESTIDADE.md
+└── docs/               # SONHO.md, HONESTIDADE.md, PESQUISA.md
 ```
 
 ## 🚀 Começando
@@ -85,11 +103,18 @@ Abra [`notebooks/dream_ai_colab.ipynb`](notebooks/dream_ai_colab.ipynb) e rode a
 ```bash
 pip install torch numpy tokenizers
 
+# Converse com a IA em modo demo (ela acorda, vive, dorme e LEMBRA na próxima vez)
+python -m src.chat --mock
+#   comandos: /status  /dormir 20  /benchmark  /sair
+
 # Testa o ciclo do sonho com problemas-semente (sem precisar do modelo grande)
 python -m dream.loop --mode seed --dreams 25 --cycles 2
 
-# Roda os testes (inclui a garantia de honestidade)
-python tests/test_dream.py
+# Mede a inteligência em problemas held-out
+python -m dream.benchmark
+
+# Roda os testes (inclui a garantia de honestidade e a de persistência)
+python -m pytest tests/ -q
 ```
 
 ### Treinar uma IA do zero (trilho de aprendizado)

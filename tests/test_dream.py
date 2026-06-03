@@ -73,6 +73,47 @@ def test_garantia_honestidade_end_to_end():
     assert not r.passed, "Um chute não pode ser aceito como solução!"
 
 
+def test_solucoes_de_referencia_passam():
+    """Toda solução de referência das sementes DEVE passar nos próprios testes."""
+    for p in SEED_PROBLEMS:
+        r = verify_solution(p.reference_solution, p.tests)
+        assert r.passed, f"Referência de '{p.title}' não passa nos testes!"
+
+
+def test_benchmark_se_auto_valida():
+    """O benchmark com soluções de referência deve dar 100% (held-out bem formado)."""
+    from dream.benchmark import validate_benchmark
+    assert validate_benchmark(), "Benchmark inconsistente: refs deveriam dar 100%"
+
+
+def test_benchmark_held_out_eh_disjunto_do_treino():
+    """HONESTIDADE: nenhum problema de avaliação pode estar no conjunto de treino."""
+    from dream.benchmark import HELDOUT_PROBLEMS
+    treino = {p.func_name for p in SEED_PROBLEMS}
+    prova = {p.func_name for p in HELDOUT_PROBLEMS}
+    assert treino.isdisjoint(prova), (
+        f"Vazamento treino↔prova: {treino & prova}. Medir no que treinou é trapaça!"
+    )
+
+
+def test_vida_persiste_entre_sessoes(tmp_path, monkeypatch):
+    """A identidade deve sobreviver entre 'sessões' (salvar e recarregar)."""
+    import dream.lifecycle as lc
+    monkeypatch.setattr(lc, "STATE_DIR", str(tmp_path))
+    monkeypatch.setattr(lc, "IDENTITY_PATH", str(tmp_path / "identity.json"))
+    monkeypatch.setattr(lc, "JOURNAL_PATH", str(tmp_path / "journal.jsonl"))
+
+    vida1 = lc.Life()
+    vida1.wake()
+    vida1.sleep(dreamed=10, verified=8, new_skills=["soma", "fib"])
+
+    vida2 = lc.Life()  # "nova sessão"
+    msg = vida2.wake()
+    assert vida2.identity.total_verified == 8
+    assert "soma" in vida2.identity.skills
+    assert vida2.identity.total_sessions == 2  # lembrou da sessão anterior
+
+
 if __name__ == "__main__":
     import sys
 
