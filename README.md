@@ -1,92 +1,114 @@
 # 🌙 Dream-AI
 
-Uma IA construída **do zero** — arquitetura Transformer (estilo GPT) escrita na mão em
-PyTorch, com foco em duas coisas: **entender como uma IA funciona de verdade** e
-**construir um modelo o mais honesto possível**.
+Uma IA de **programação** que **sonha** para ficar mais inteligente — e que é honesta
+por construção.
 
-> Honestidade em primeiro lugar: este README te conta a verdade sobre o que é e o que
-> não é viável. Sem hype.
-
----
-
-## 🎯 Objetivo
-
-Criar uma IA capaz de demonstrar inteligência real e, acima de tudo, ser **honesta** —
-ou seja, admitir quando não sabe, sinalizar incerteza e evitar inventar fatos
-(o famoso "alucinar").
-
-## ⚠️ A verdade sobre "1 bilhão de parâmetros do zero"
-
-Treinar um modelo de **1B de parâmetros do absoluto zero** exige, na prática:
-
-- **~20 bilhões de tokens** de dados de treino (lei de Chinchilla: ~20 tokens por parâmetro).
-- **Milhares de horas** de GPU A100/H100.
-- Dezenas de milhares de dólares em compute.
-
-Isso **não é viável** no Google Colab grátis (T4/L4 com horas limitadas). Isso é fato.
-
-Por isso o projeto tem **dois trilhos**, e o mesmo código serve para os dois:
-
-### Trilho 1 — Aprendizado (do zero de verdade)
-Treine um modelo **pequeno** (10M–50M parâmetros) do zero no Colab. Ele aprende a gerar
-texto em português e te ensina, peça por peça, como uma IA funciona. Config:
-[`config/small.py`](config/small.py).
-
-### Trilho 2 — O Sonho 1B (caminho realista)
-Para ter um modelo de 1B inteligente **de verdade**, o caminho viável é **fine-tuning**
-(LoRA/QLoRA) de um modelo base aberto de ~1B (Llama-3.2-1B, Qwen2.5-1.5B, etc.) com foco
-em honestidade. A config [`config/dream_1b.py`](config/dream_1b.py) define a arquitetura
-de 1B caso um dia você tenha o compute para treinar do zero.
+> Honestidade em primeiro lugar: este README te conta a verdade sobre o que é viável.
+> Sem hype.
 
 ---
 
-## 🏗️ Como funciona (arquitetura)
+## 🎯 A visão
 
-Tudo escrito na mão, sem "caixas pretas":
+Pegar um modelo base aberto de **~1B parâmetros especializado em código**
+(Qwen2.5-Coder) e torná-lo **hiper-inteligente em programação** através de um ciclo de
+**auto-aprimoramento inspirado no sono humano e na DeepMind**:
 
-| Componente | Arquivo | O que é |
-|---|---|---|
-| Tokenizer (BPE) | `src/tokenizer.py` | Quebra texto em tokens |
-| Atenção multi-cabeça | `src/model.py` | O coração do Transformer |
-| Bloco Transformer | `src/model.py` | Atenção + MLP + normalização |
-| Modelo GPT | `src/model.py` | Empilha os blocos |
-| Loop de treino | `src/train.py` | Ensina o modelo |
-| Geração de texto | `src/generate.py` | Faz o modelo "falar" |
+A IA **sonha** — inventa desafios de programação, tenta resolver, e **verifica
+executando o código de verdade**. Só o que realmente funciona vira aprendizado.
+Depois ela **dorme** (consolida via LoRA) e acorda melhor.
+
+```
+   ☀️ VIGÍLIA              🌙 SONHO                    😴 SONO
+  (atende você)    →    (inventa + resolve +    →   (consolida via LoRA
+                         VERIFICA executando)        as soluções corretas)
+        ↑                                                    │
+        └────────────────── acorda mais inteligente ─────────┘
+```
+
+📖 Detalhes em [`docs/SONHO.md`](docs/SONHO.md).
+
+## 🔒 Honestidade por construção
+
+A regra inviolável do sonho:
+
+> **Só vira memória o que passa na execução real.**
+
+O interpretador Python é o juiz. Uma solução alucinada que "parece certa" mas não passa
+nos testes é **descartada** — nunca aprendida. Isso está **provado** em
+[`tests/test_dream.py`](tests/test_dream.py). A memória do que ela aprendeu é um arquivo
+JSONL **auditável**: você vê exatamente o que cada sonho ensinou.
+
+📖 Estratégia completa de honestidade em [`docs/HONESTIDADE.md`](docs/HONESTIDADE.md).
+
+## ⚠️ A verdade sobre "1B do zero"
+
+Treinar 1B do **absoluto zero** precisa de ~20B tokens e milhares de horas de GPU —
+**inviável no Colab**. Por isso a visão usa **fine-tuning** de um modelo 1B já forte.
+
+Mas o repo **também** inclui um GPT completo escrito **do zero** (estilo nanoGPT), para
+você entender como uma IA funciona peça por peça. Treine um modelo pequeno no Colab e
+veja-o aprender.
+
+---
+
+## 📂 Estrutura
+
+```
+Dream-ai/
+├── src/
+│   ├── model.py        # GPT decoder-only escrito do zero (atenção, blocos, etc.)
+│   ├── tokenizer.py    # tokenizer BPE
+│   ├── data.py         # preparação de dados
+│   ├── train.py        # loop de treino do zero
+│   ├── generate.py     # geração de texto
+│   ├── coder.py        # carrega o modelo Coder de 1B (Qwen2.5-Coder)
+│   └── honesty.py      # prompt de sistema + métricas de honestidade
+├── dream/
+│   ├── verifier.py     # 🔬 executa o código e checa — a "checagem de realidade"
+│   ├── problems.py     # 🌱 banco de problemas-semente
+│   ├── dreamer.py      # 🌙 inventa novos problemas
+│   ├── consolidate.py  # 😴 consolida (LoRA) o que foi sonhado e verificado
+│   └── loop.py         # 🔁 orquestra vigília → sonho → sono
+├── config/             # tamanhos: nano, small, medium, dream_1b
+├── tests/              # testes (inclui a prova de honestidade)
+├── notebooks/          # 🚀 dream_ai_colab.ipynb — ponto de entrada no Colab Pro
+└── docs/               # SONHO.md, HONESTIDADE.md
+```
 
 ## 🚀 Começando
 
+### No Colab Pro (a visão completa)
+Abra [`notebooks/dream_ai_colab.ipynb`](notebooks/dream_ai_colab.ipynb) e rode as células.
+
+### Localmente (testar a maquinaria, sem GPU)
 ```bash
-pip install -r requirements.txt
+pip install torch numpy tokenizers
 
-# 1. Prepara os dados (baixa/processa um corpus de texto)
-python -m src.data --config small
+# Testa o ciclo do sonho com problemas-semente (sem precisar do modelo grande)
+python -m dream.loop --mode seed --dreams 25 --cycles 2
 
-# 2. Treina o tokenizer
-python -m src.tokenizer --train --config small
-
-# 3. Treina o modelo
-python -m src.train --config small
-
-# 4. Conversa com a sua IA
-python -m src.generate --config small --prompt "O sentido da vida é"
+# Roda os testes (inclui a garantia de honestidade)
+python tests/test_dream.py
 ```
 
-No Colab, abra [`notebooks/dream_ai_colab.ipynb`](notebooks/dream_ai_colab.ipynb).
+### Treinar uma IA do zero (trilho de aprendizado)
+```bash
+python -m src.data --config small
+python -m src.tokenizer --train --config small
+python -m src.data --config small --tokenize
+python -m src.train --config small
+python -m src.generate --config small --prompt "def fibonacci(n):"
+```
 
-## 🧭 Princípio de honestidade
+## 📊 Configurações de tamanho (modelo do zero)
 
-A honestidade de uma IA não vem do tamanho — vem dos **dados** e do **treino**. Veja
-[`docs/HONESTIDADE.md`](docs/HONESTIDADE.md) para a estratégia concreta de como tornar
-este modelo honesto.
-
-## 📊 Configurações de tamanho
-
-| Config | Parâmetros | Camadas | Dim | Cabeças | Viável no Colab? |
-|---|---|---|---|---|---|
-| `nano` | ~1M | 4 | 128 | 4 | ✅ minutos |
-| `small` | ~30M | 6 | 384 | 6 | ✅ horas |
-| `medium` | ~120M | 12 | 768 | 12 | ⚠️ Colab Pro |
-| `dream_1b` | ~1B | 24 | 2048 | 16 | ❌ precisa de cluster |
+| Config | Parâmetros | Camadas | Dim | Viável no Colab? |
+|---|---|---|---|---|
+| `nano` | ~1M | 4 | 128 | ✅ minutos |
+| `small` | ~30M | 6 | 384 | ✅ horas |
+| `medium` | ~120M | 12 | 768 | ⚠️ Colab Pro |
+| `dream_1b` | ~1B | 24 | 2048 | ❌ precisa de cluster |
 
 ---
 
