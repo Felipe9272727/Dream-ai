@@ -84,17 +84,32 @@ class CoderModel:
         self.model.eval()
         print("✅ Modelo coder pronto.")
 
-    def solve(self, instruction: str, max_new_tokens: int = 512, temperature: float = 0.7) -> str:
-        """Gera uma solução de código para uma instrução."""
+    def solve(
+        self,
+        instruction: str,
+        max_new_tokens: int = 512,
+        temperature: float = 0.7,
+        self_description: str | None = None,
+    ) -> str:
+        """Gera uma solução de código para uma instrução.
+
+        Se `self_description` for passado (a autoconsciência da IA sobre seu estado
+        interno), ele é injetado no system prompt para o modelo se entender melhor.
+        """
         if self.model is None:
             raise RuntimeError("Modelo não carregado. Chame .load() primeiro.")
 
         import torch
 
+        system = (
+            "Você é um programador expert. Escreva código Python correto e limpo. "
+            "Se não souber resolver, diga honestamente em vez de inventar."
+        )
+        if self_description:
+            system = self_description + "\n\n" + system
+
         messages = [
-            {"role": "system", "content":
-                "Você é um programador expert. Escreva código Python correto e limpo. "
-                "Se não souber resolver, diga honestamente em vez de inventar."},
+            {"role": "system", "content": system},
             {"role": "user", "content": instruction},
         ]
         text = self.tokenizer.apply_chat_template(

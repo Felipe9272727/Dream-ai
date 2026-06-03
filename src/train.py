@@ -21,8 +21,7 @@ import torch
 from config import get_config
 from src.data import get_batch
 from src.model import GPT, GPTConfig
-
-CKPT_DIR = "checkpoints"
+from src import storage
 
 
 def get_lr(it: int, cfg: dict) -> float:
@@ -92,8 +91,9 @@ def train(config_name: str, resume: bool = False) -> None:
     use_amp = device_type == "cuda"
     scaler = torch.cuda.amp.GradScaler(enabled=use_amp)
 
-    os.makedirs(CKPT_DIR, exist_ok=True)
-    ckpt_path = os.path.join(CKPT_DIR, f"{config_name}.pt")
+    # Checkpoints salvos SEMPRE no Drive (quando disponível) para não se perder
+    ckpt_path = storage.resolve("checkpoints", f"{config_name}.pt")
+    print(f"💾 {storage.status()}")
 
     start_iter = 0
     best_val = float("inf")

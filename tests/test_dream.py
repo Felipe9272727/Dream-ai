@@ -99,19 +99,32 @@ def test_benchmark_held_out_eh_disjunto_do_treino():
 def test_vida_persiste_entre_sessoes(tmp_path, monkeypatch):
     """A identidade deve sobreviver entre 'sessões' (salvar e recarregar)."""
     import dream.lifecycle as lc
-    monkeypatch.setattr(lc, "STATE_DIR", str(tmp_path))
-    monkeypatch.setattr(lc, "IDENTITY_PATH", str(tmp_path / "identity.json"))
-    monkeypatch.setattr(lc, "JOURNAL_PATH", str(tmp_path / "journal.jsonl"))
+    monkeypatch.setenv("DREAM_HOME", str(tmp_path))  # isola o armazenamento no tmp
 
     vida1 = lc.Life()
     vida1.wake()
     vida1.sleep(dreamed=10, verified=8, new_skills=["soma", "fib"])
 
     vida2 = lc.Life()  # "nova sessão"
-    msg = vida2.wake()
+    vida2.wake()
     assert vida2.identity.total_verified == 8
     assert "soma" in vida2.identity.skills
     assert vida2.identity.total_sessions == 2  # lembrou da sessão anterior
+
+
+def test_autoconsciencia_reflete_estado(tmp_path, monkeypatch):
+    """A descrição de si mesma deve refletir o estado interno real."""
+    import dream.lifecycle as lc
+    monkeypatch.setenv("DREAM_HOME", str(tmp_path))
+
+    vida = lc.Life()
+    vida.wake()
+    vida.sleep(dreamed=10, verified=7, new_skills=["soma", "fib"])
+
+    desc = vida.self_description()
+    assert "soma" in desc and "fib" in desc       # sabe o que domina
+    assert "não sei" in desc.lower()               # ciente dos próprios limites
+    assert "10" in desc and "7" in desc            # reflete os números reais
 
 
 if __name__ == "__main__":

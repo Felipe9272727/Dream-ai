@@ -16,12 +16,11 @@ import torch
 
 from src.model import GPT, GPTConfig
 from src.tokenizer import DreamTokenizer
-
-CKPT_DIR = "checkpoints"
+from src import storage
 
 
 def load_model(config_name: str, device: str):
-    ckpt_path = os.path.join(CKPT_DIR, f"{config_name}.pt")
+    ckpt_path = storage.resolve("checkpoints", f"{config_name}.pt")
     if not os.path.exists(ckpt_path):
         raise FileNotFoundError(
             f"Checkpoint não encontrado em {ckpt_path}. "

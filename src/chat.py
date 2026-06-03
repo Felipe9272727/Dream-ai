@@ -66,6 +66,13 @@ def do_sleep(coder, life: Life, n_dreams: int, use_model: bool) -> None:
 
 
 def chat(use_model: bool, mock: bool) -> None:
+    from src import storage
+
+    # Tenta montar o Google Drive para a vida da IA ser realmente persistente
+    if use_model and not mock:
+        storage.mount_drive()
+    print(storage.status())
+
     life = Life()
     print(life.wake())
 
@@ -104,7 +111,8 @@ def chat(use_model: bool, mock: bool) -> None:
             n = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 20
             do_sleep(coder, life, n, use_model)
         else:
-            resposta = coder.solve(user)
+            # Injeta a autoconsciência: o modelo recebe o próprio estado interno
+            resposta = coder.solve(user, self_description=life.self_description())
             print(f"\n{life.identity.name} ➤\n{resposta}\n")
 
 

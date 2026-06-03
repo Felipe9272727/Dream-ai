@@ -16,15 +16,18 @@ from __future__ import annotations
 import json
 import os
 
+from src import storage
+
+
 # Cada item da memória do sonho: instrução + solução verificada.
-# Salvamos em JSONL para ser auditável (honestidade: dá pra inspecionar o que ele aprendeu).
-DREAM_MEMORY_PATH = "dream_memory/verified.jsonl"
+# Salvamos em JSONL (auditável) e SEMPRE no Google Drive quando disponível.
+def memory_path() -> str:
+    return storage.resolve("dream_memory", "verified.jsonl")
 
 
 def remember(instruction: str, solution_code: str, score: float) -> None:
     """Grava uma solução verificada na memória de sonhos (JSONL auditável)."""
-    os.makedirs(os.path.dirname(DREAM_MEMORY_PATH), exist_ok=True)
-    with open(DREAM_MEMORY_PATH, "a", encoding="utf-8") as f:
+    with open(memory_path(), "a", encoding="utf-8") as f:
         f.write(json.dumps({
             "instruction": instruction,
             "solution": solution_code,
@@ -33,15 +36,16 @@ def remember(instruction: str, solution_code: str, score: float) -> None:
 
 
 def load_memory() -> list[dict]:
-    if not os.path.exists(DREAM_MEMORY_PATH):
+    path = memory_path()
+    if not os.path.exists(path):
         return []
-    with open(DREAM_MEMORY_PATH, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         return [json.loads(line) for line in f if line.strip()]
 
 
 def consolidate(
     coder,
-    output_dir: str = "adapters/dream_lora",
+    output_dir: str | None = None,
     epochs: int = 1,
     lr: float = 2e-4,
     min_examples: int = 8,
@@ -51,6 +55,10 @@ def consolidate(
 
     Retorna o caminho do adapter salvo, ou None se não houver memória suficiente.
     """
+    # Adapter salvo SEMPRE no Drive (quando disponível) para sobreviver às sessões
+    if output_dir is None:
+        output_dir = storage.resolve("adapters", "dream_lora")
+
     memory = load_memory()
     if len(memory) < min_examples:
         print(f"💤 Memória insuficiente para consolidar "

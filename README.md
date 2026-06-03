@@ -41,7 +41,19 @@ acumula num adapter LoRA + memória legível.
 
 Isso é fundamentado em pesquisa real (sleep-time compute, memory consolidation, lifelong
 learning) — veja [`docs/PESQUISA.md`](docs/PESQUISA.md). A identidade dela vive em
-`life/identity.json` e o diário episódico em `life/journal.jsonl` — **auditáveis**.
+`identity.json` e o diário episódico em `journal.jsonl` — **auditáveis**.
+
+### 🪞 Autoconsciência do estado interno
+A IA recebe no próprio contexto uma descrição de si mesma — quem é, quantos ciclos
+dormiu, quais habilidades **verificou de fato** — para "se entender melhor" e raciocinar
+sobre os próprios limites com honestidade (`Life.self_description()` em
+[`dream/lifecycle.py`](dream/lifecycle.py)).
+
+### 💾 Persistência permanente no Google Drive
+Como o Colab apaga tudo ao desligar, **tudo que importa é salvo SEMPRE no Google Drive**
+(identidade, memória de sonhos, checkpoints, adapters). A camada
+[`src/storage.py`](src/storage.py) detecta o Drive montado e direciona tudo para
+`MyDrive/DreamAI/`. No Colab, basta `storage.mount_drive()` no início.
 
 ## 🔒 Honestidade por construção
 

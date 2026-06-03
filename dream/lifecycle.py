@@ -22,9 +22,16 @@ import datetime
 import json
 import os
 
-STATE_DIR = "life"
-IDENTITY_PATH = os.path.join(STATE_DIR, "identity.json")
-JOURNAL_PATH = os.path.join(STATE_DIR, "journal.jsonl")
+from src import storage
+
+# Os caminhos são resolvidos via storage (Google Drive quando disponível), de forma
+# preguiçosa — assim, montar o Drive antes de usar já direciona tudo pra lá.
+def _identity_path() -> str:
+    return storage.resolve("life", "identity.json")
+
+
+def _journal_path() -> str:
+    return storage.resolve("life", "journal.jsonl")
 
 
 @dataclasses.dataclass
@@ -50,33 +57,35 @@ def _now() -> str:
 
 def load_identity() -> Identity:
     """Carrega a identidade salva, ou cria uma nova se for o primeiro despertar."""
-    if os.path.exists(IDENTITY_PATH):
-        with open(IDENTITY_PATH, "r", encoding="utf-8") as f:
+    path = _identity_path()
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return Identity(**data)
+        # tolera campos novos/antigos
+        known = {f.name for f in dataclasses.fields(Identity)}
+        return Identity(**{k: v for k, v in data.items() if k in known})
     # Primeiro nascimento
-    ident = Identity(born=_now())
-    return ident
+    return Identity(born=_now())
 
 
 def save_identity(ident: Identity) -> None:
-    os.makedirs(STATE_DIR, exist_ok=True)
-    with open(IDENTITY_PATH, "w", encoding="utf-8") as f:
+    path = _identity_path()
+    with open(path, "w", encoding="utf-8") as f:
         json.dump(ident.to_dict(), f, ensure_ascii=False, indent=2)
 
 
 def journal(event: str, detail: dict | None = None) -> None:
     """Registra um evento no diário episódico (a memória do 'dia')."""
-    os.makedirs(STATE_DIR, exist_ok=True)
     entry = {"when": _now(), "event": event, "detail": detail or {}}
-    with open(JOURNAL_PATH, "a", encoding="utf-8") as f:
+    with open(_journal_path(), "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
 def read_journal(last_n: int = 10) -> list[dict]:
-    if not os.path.exists(JOURNAL_PATH):
+    path = _journal_path()
+    if not os.path.exists(path):
         return []
-    with open(JOURNAL_PATH, "r", encoding="utf-8") as f:
+    with open(path, "r", encoding="utf-8") as f:
         entries = [json.loads(line) for line in f if line.strip()]
     return entries[-last_n:]
 
@@ -86,7 +95,7 @@ class Life:
 
     def __init__(self):
         self.identity = load_identity()
-        self.first_birth = not os.path.exists(IDENTITY_PATH)
+        self.first_birth = not os.path.exists(_identity_path())
 
     # 🌅 ----------------------------------------------------------------
     def wake(self) -> str:
@@ -150,5 +159,32 @@ class Life:
             f"Sonhos totais: {i.total_dreams}\n"
             f"Conhecimentos verificados: {i.total_verified}\n"
             f"Habilidades: {', '.join(i.skills) or '—'}\n"
-            f"Adapter (fast weights): {i.adapter_path or 'nenhum ainda'}"
+            f"Adapter (fast weights): {i.adapter_path or 'nenhum ainda'}\n"
+            f"{storage.status()}"
+        )
+
+    # 🪞 ----------------------------------------------------------------
+    def self_description(self) -> str:
+        """
+        AUTOCONSCIÊNCIA: descrição do próprio estado interno, em 1ª pessoa.
+
+        Isto é injetado no contexto do modelo (system prompt) para que ele tenha
+        ciência de quem é, do que já aprendeu e de como aprende — para se entender
+        melhor e raciocinar sobre os próprios limites com honestidade.
+        """
+        i = self.identity
+        taxa = (i.total_verified / i.total_dreams * 100) if i.total_dreams else 0.0
+        skills = ", ".join(i.skills) if i.skills else "ainda estou construindo minhas habilidades"
+        return (
+            f"Quem eu sou (meu estado interno):\n"
+            f"- Meu nome é {i.name}. Nasci em {i.born[:10]} e já vivi {i.total_sessions} sessões.\n"
+            f"- Sou um modelo de ~1B de parâmetros especializado em programação.\n"
+            f"- Aprendo dormindo: durante o sono eu SONHO problemas, tento resolvê-los e só\n"
+            f"  aprendo com os que passam na execução real. Já dormi {i.sleep_cycles} vezes.\n"
+            f"- Já sonhei {i.total_dreams} problemas; {i.total_verified} viraram conhecimento\n"
+            f"  verificado (taxa de acerto dos meus sonhos: {taxa:.0f}%).\n"
+            f"- Habilidades que domino de fato (verificadas): {skills}.\n"
+            f"- Por construção, prefiro dizer 'não sei' a inventar. Meu conhecimento tem\n"
+            f"  limites e eu tenho ciência deles: o que não está nas minhas habilidades\n"
+            f"  verificadas, eu trato com cautela e honestidade."
         )
