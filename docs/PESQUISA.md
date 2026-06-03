@@ -108,9 +108,39 @@ aprendeu, "vive" o dia atendendo você, e "dorme" consolidando — em ciclo, ind
 
 ---
 
+## 5. Técnicas de auto-aprimoramento que ela usa dormindo
+
+Pesquisa mais recente (2024–2025) sobre como uma IA aprende sozinha de forma eficiente —
+tudo embutido em `dream/adaptive.py`, `dream/reflect.py` e `dream/consolidate.py`:
+
+- **STaR (Self-Taught Reasoner)** e **ReST (Reinforced Self-Training, DeepMind)**:
+  decompõem o aprendizado em gerar dados (E-step) e treinar (M-step). O modelo gera
+  soluções, **verifica**, e treina só nas corretas. **ReST-RL (2025)** mostra ganhos
+  fortes especificamente em *raciocínio de código*.
+- **RFT (Rejection-sampling Fine-Tuning)** / **Expert Iteration**: amostra várias
+  tentativas, mantém as bem-sucedidas, treina nelas, repete.
+- **AdaSTaR / Adaptive Difficulty Curriculum (2025)**: reestima a dificuldade ao longo
+  do treino para mantê-la **alinhada à habilidade atual** — o "Difficulty Shift". É o
+  nosso currículo adaptativo (zona de desenvolvimento proximal).
+- **Reflect, Retry, Reward (2025)** e **Exploring Expert Failures (2025)**: aprender com
+  os **erros** — refletir sobre a falha e corrigir melhora o agente. É o nosso Reflect-Retry.
+- **Self-play autocurricula (AlphaGo/DeepMind)**: jogar contra versões de si mesmo cria
+  um currículo automático de dificuldade crescente.
+
+➡️ **No Dream-AI:** a IA sonha na borda da habilidade (AdaSTaR), corrige os próprios erros
+(Reflect-Retry), só aprende o verificado (STaR/ReST), e a dificuldade sobe sozinha
+(autocurrículo) — tudo dentro do daemon de vida contínua.
+
 ## Fontes
 
 - [Sleep-like unsupervised replay reduces catastrophic forgetting (Nature Communications, 2022)](https://www.nature.com/articles/s41467-022-34938-7)
+- [STaR: Bootstrapping Reasoning with Reasoning](https://arxiv.org/abs/2203.14465)
+- [Beyond Human Data: Scaling Self-Training (ReST, DeepMind)](https://arxiv.org/pdf/2312.06585)
+- [ReST-RL: Accurate Code Reasoning via Self-Training (2025)](https://arxiv.org/abs/2508.19576)
+- [AdaSTaR: Adaptive Data Sampling for Self-Taught Reasoners (2025)](https://arxiv.org/pdf/2505.16322)
+- [Reflect, Retry, Reward: Self-Improving LLMs via RL (2025)](https://arxiv.org/pdf/2505.24726)
+- [Exploring Expert Failures Improves LLM Agent Tuning (2025)](https://arxiv.org/abs/2504.13145)
+- [Adaptive Difficulty Curriculum Learning (2025)](https://arxiv.org/pdf/2505.08364)
 - [Brain-inspired replay for continual learning (Nature Communications)](https://pmc.ncbi.nlm.nih.gov/articles/PMC7426273/)
 - [Can sleep protect memories from catastrophic forgetting? (eLife)](https://elifesciences.org/articles/51005)
 - [Sleep-Like Memory Consolidation in LLMs](https://www.emergentmind.com/papers/2605.26099)

@@ -32,6 +32,17 @@ def dream_from_seeds(n: int, rng: random.Random | None = None) -> list[Problem]:
     return out
 
 
+def dream_at_difficulty(n: int, difficulty: int,
+                        rng: random.Random | None = None) -> list[Problem]:
+    """Gera n problemas de uma dificuldade-alvo (cai para a mais próxima se faltar)."""
+    rng = rng or random.Random()
+    pool = [p for p in SEED_PROBLEMS if p.difficulty == difficulty]
+    if not pool:
+        # nível sem sementes: pega o mais próximo
+        pool = sorted(SEED_PROBLEMS, key=lambda p: abs(p.difficulty - difficulty))[:3]
+    return [_mutate(rng.choice(pool), rng) for _ in range(n)]
+
+
 def _mutate(p: Problem, rng: random.Random) -> Problem:
     """Cria uma variação de um problema-semente com testes recalculados de verdade.
 

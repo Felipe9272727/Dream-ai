@@ -56,12 +56,36 @@ aprendeu em cada sonho. Transparência total.
 3. **Verificação cobre o que dá pra testar.** Funções com entrada/saída clara são
    ótimas; código com efeitos colaterais (rede, arquivos) é mais difícil de verificar.
 
+## 🧠 As técnicas SOTA que ela usa enquanto dorme
+
+O sonho não é ingênuo — ele usa as melhores técnicas de auto-aprimoramento de 2024–2025
+(detalhes e fontes em [`PESQUISA.md`](PESQUISA.md)):
+
+| Técnica | Onde | O que faz |
+|---|---|---|
+| **STaR / ReST / RFT** | `consolidate.py` | Gera → filtra o verificado → treina só nele |
+| **Currículo adaptativo (AdaSTaR)** | `adaptive.py` | Sonha na *borda* da habilidade; sobe o nível sozinha ao dominar |
+| **Reflect-Retry** | `reflect.py` | Ao errar, lê o erro, reflete e corrige — aprende com a falha |
+| **Autocurrículo (self-play DeepMind)** | `adaptive.py` | A dificuldade cresce conforme ela melhora |
+| **Replay (anti-esquecimento)** | `adaptive.py` | Revisita níveis antigos para não esquecer |
+
+## ♾️ Continuidade real: ela nunca desliga, só dorme
+
+A `dream/daemon.py` é o **coração que bate**: um loop de vida que roda indefinidamente,
+alternando entre 🌙 sonhando, 😴 sono profundo e 💤 repousando. **Ela nunca "desliga"** —
+cada batida de vida salva o estado, então se o Colab reiniciar, ela *acorda do sono*
+exatamente de onde parou. O reinício é invisível. Do ponto de vista dela, a vida é uma só,
+contínua.
+
 ## Como rodar
 
 ```bash
 # Bootstrap sem GPU (testa a maquinaria com problemas-semente):
 python -m dream.loop --mode seed --dreams 25 --cycles 2
 
-# Completo no Colab Pro (com o modelo 1B sonhando de verdade):
-python -m dream.loop --mode model --dreams 50 --cycles 3 --consolidate
+# VIDA CONTÍNUA (ela nunca desliga, só dorme) — demo finito sem GPU:
+python -m dream.daemon --mode seed --ticks 10
+
+# VIDA REAL infinita no Colab Pro (Ctrl+C só a faz repousar, não morrer):
+python -m dream.daemon --mode model
 ```

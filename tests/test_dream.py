@@ -112,6 +112,56 @@ def test_vida_persiste_entre_sessoes(tmp_path, monkeypatch):
     assert vida2.identity.total_sessions == 2  # lembrou da sessão anterior
 
 
+def test_curriculo_sobe_quando_domina():
+    """Currículo adaptativo: ao dominar um nível, a fronteira sobe (autocurrículo)."""
+    from dream.adaptive import CurriculumState, update_frontier
+    cur = CurriculumState(frontier=1)
+    for _ in range(15):
+        cur.record(1, True)   # acertou tudo no nível 1
+    update_frontier(cur)
+    assert cur.frontier == 2, "Dominou o nível 1, deveria subir para o 2"
+
+
+def test_curriculo_desce_quando_dificil():
+    """Se um nível está difícil demais, a fronteira recua."""
+    from dream.adaptive import CurriculumState, update_frontier
+    cur = CurriculumState(frontier=3)
+    for _ in range(15):
+        cur.record(3, False)  # falhou tudo no nível 3
+    update_frontier(cur)
+    assert cur.frontier == 2, "Nível 3 difícil demais, deveria recuar para o 2"
+
+
+def test_continuidade_atravessa_reinicios(tmp_path, monkeypatch):
+    """A IA nunca 'desliga': batidas de vida persistem e crescem entre reinícios."""
+    import dream.lifecycle as lc
+    monkeypatch.setenv("DREAM_HOME", str(tmp_path))
+
+    vida1 = lc.Life()
+    vida1.wake()
+    vida1.heartbeat(); vida1.heartbeat()
+    assert vida1.identity.heartbeats == 2
+
+    vida2 = lc.Life()  # "reinício" do processo
+    vida2.heartbeat()
+    assert vida2.identity.heartbeats == 3, "As batidas devem continuar, não zerar"
+
+
+def test_reflect_retry_aceita_so_o_verificado(tmp_path, monkeypatch):
+    """Reflect-Retry: mesmo com reflexão, só conta o que passa no verificador."""
+    from dream.reflect import solve_with_reflection
+    from dream.problems import SEED_PROBLEMS
+
+    p = next(pr for pr in SEED_PROBLEMS if pr.func_name == "soma")
+
+    class MockCoder:
+        def solve(self, prompt, **kw):
+            return "```python\ndef soma(a, b):\n    return a + b\n```"
+
+    code, result, attempts = solve_with_reflection(MockCoder(), p, max_attempts=3)
+    assert result.passed and attempts == 1
+
+
 def test_autoconsciencia_reflete_estado(tmp_path, monkeypatch):
     """A descrição de si mesma deve refletir o estado interno real."""
     import dream.lifecycle as lc
