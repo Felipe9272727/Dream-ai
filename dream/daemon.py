@@ -29,7 +29,7 @@ import random
 
 from .adaptive import CurriculumState, choose_difficulty, update_frontier, report
 from .consolidate import remember, load_memory
-from .dreamer import dream_at_difficulty, dream_with_model
+from .dreamer import dream_at_difficulty
 from .lifecycle import Life
 from .reflect import solve_with_reflection
 from .verifier import verify_solution
@@ -56,17 +56,13 @@ class DreamDaemon:
         self.verified_since_sleep = 0
 
     def _dream_once(self, difficulty: int):
-        """Sonha UM problema, resolve, verifica. Retorna (problema, passou)."""
+        """Sonha UM problema (gabarito confiável), resolve com reflexão, verifica."""
+        p = dream_at_difficulty(1, difficulty, self.rng)[0]
         if self.use_model and self.coder is not None:
-            problems = dream_with_model(self.coder, 1, difficulty)
-            if not problems:
-                return None, False
-            p = problems[0]
             code, result, _ = solve_with_reflection(self.coder, p, max_attempts=3)
             passed = bool(result and result.passed)
         else:
             # modo semente (sem GPU): usa a solução de referência como "oráculo"
-            p = dream_at_difficulty(1, difficulty, self.rng)[0]
             result = verify_solution(p.reference_solution, p.tests)
             code, passed = p.reference_solution, result.passed
 

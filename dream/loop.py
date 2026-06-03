@@ -22,7 +22,7 @@ from __future__ import annotations
 import argparse
 import random
 
-from .dreamer import dream_from_seeds, dream_with_model
+from .dreamer import dream_from_seeds, dream_with_model, dream_at_difficulty
 from .problems import Problem
 from .verifier import verify_solution
 
@@ -41,39 +41,45 @@ def run_cycle(
     difficulty: int = 2,
     rng: random.Random | None = None,
     use_model: bool = True,
+    source: str = "curated",
+    max_attempts: int = 3,
 ) -> dict:
-    """Roda UM ciclo de sonho: gera problemas, resolve, verifica, memoriza os bons."""
+    """Roda UM ciclo de sonho: gera problemas, resolve, verifica, memoriza os bons.
+
+    source="curated" (PADRÃO): pratica em problemas com gabarito CONFIÁVEL (banco
+        validado). O sinal de verificação é verdadeiro → aprendizado de qualidade.
+    source="invented": a IA inventa os próprios problemas E testes. Criativo, mas
+        pouco confiável em modelos pequenos (gabarito que ele inventa costuma ter erro).
+    """
     from .consolidate import remember
+    from .reflect import solve_with_reflection
 
     rng = rng or random.Random()
 
-    # 1) SONHAR — inventar problemas
-    if use_model and coder is not None:
+    # 1) SONHAR — gerar os problemas do ciclo
+    if use_model and coder is not None and source == "invented":
         problems = dream_with_model(coder, n_dreams, difficulty)
     else:
-        problems = dream_from_seeds(n_dreams, rng)
+        # problemas curados (testes confiáveis), variando os valores a cada sonho
+        problems = dream_at_difficulty(n_dreams, difficulty, rng)
 
-    stats = {"sonhados": len(problems), "verificados": 0, "falhos": 0}
+    stats = {"sonhados": len(problems), "verificados": 0, "falhos": 0, "corrigidos": 0}
 
-    # 2) RESOLVER + 3) VERIFICAR
+    # 2) RESOLVER (com reflexão) + 3) VERIFICAR (contra gabarito confiável)
     for p in problems:
-        instruction = p.to_instruction()
-
         if use_model and coder is not None:
-            from src.coder import extract_code
-            raw = coder.solve(instruction)
-            solution = extract_code(raw)
+            code, result, attempts = solve_with_reflection(coder, p, max_attempts=max_attempts)
+            passed = bool(result and result.passed)
+            if passed and attempts > 1:
+                stats["corrigidos"] += 1  # acertou após refletir sobre o erro
         else:
-            solution = _solve_with_seed_oracle(p)
+            code = _solve_with_seed_oracle(p)
+            result = verify_solution(code, p.tests) if code else None
+            passed = bool(result and result.passed)
 
-        if not solution:
-            stats["falhos"] += 1
-            continue
-
-        result = verify_solution(solution, p.tests)
-        if result.passed:
+        if passed:
             stats["verificados"] += 1
-            remember(instruction, solution, result.score)  # só o verificado vira memória
+            remember(p.to_instruction(), code, 1.0)  # só o verificado vira memória
         else:
             stats["falhos"] += 1
 
